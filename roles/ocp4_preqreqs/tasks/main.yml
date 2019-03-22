@@ -1,0 +1,7 @@
+- set_fact:
+    ssh_key: "{{ lookup('file', ssh_key) }}"
+
+- name: Create install-config form template
+  template:
+      dest: "{{ velero_auth_dir }}/install-config.yaml"
+      src: install-config.yaml.j2

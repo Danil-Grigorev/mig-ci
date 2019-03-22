@@ -5,13 +5,14 @@ properties([disableConcurrentBuilds(),
 parameters([string(defaultValue: 'v3.7', description: 'OpenShift version to deploy', name: 'OPENSHIFT_VERSION', trim: false), 
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_access_key_id', description: 'EC2 access key ID for auth purposes', name: 'EC2_ACCESS_KEY_ID', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_secret_access_key', description: 'EC2 private key needed to access instances, from Jenkins credentials store', name: 'EC2_SECRET_ACCESS_KEY', required: true),
-credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_pull_secret', description: 'Pull secret for ocp4 cluster creation', name: 'PULL_SECRET', required: true),
+credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_pull_secret', description: 'Pull secret for ocp4 cluster creation', name: 'CI_PULL_SECRET', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl', defaultValue: 'ci_ec2_key', description: 'EC2 private key needed to access instances, from Jenkins credentials store', name: 'EC2_PRIV_KEY', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl', defaultValue: 'ci_pub_key', description: 'EC2 public key needed to create OCP4 instances', name: 'EC2_PUB_KEY', required: true),
 string(defaultValue: 'ci', description: 'EC2 SSH key name to deploy on instances for remote access ', name: 'EC2_KEY', trim: false),
 string(defaultValue: 'ci.pem', description: 'EC2 SSH private key filename to access instances', name: 'EC2_PRIVATE_KEY_FILE', trim: false),
 string(defaultValue: 'us-east-1', description: 'EC2 region to deploy instances', name: 'EC2_REGION', trim: false),
 string(defaultValue: 'm4.large', description: 'EC2 instance type to deploy', name: 'EC2_INSTANCE_TYPE', trim: false),
+string(defaultValue: '14.0', description: 'Ocp 4 version installer version to get, in format xx.x', name: 'OCP4_VERSION', trim: false),
 booleanParam(defaultValue: true, description: 'EC2 terminate instances after build', name: 'EC2_TERMINATE_INSTANCES')]),
 pipelineTriggers([cron('H(0-10) 23 * * *')])])
 
@@ -61,21 +62,22 @@ node {
             }
 
             withCredentials([
-                string(credentialsId: "$PULL_SECRET", variable: "CI_PULL_SECRET")]) {
+                string(credentialsId: "$CI_PULL_SECRET", variable: "PULL_SECRET")]) {
                 dir('ocp4') {
-                    sh 'wget -q https://github.com/openshift/installer/releases/download/v0.12.0/openshift-install-linux-amd64'
+                    sh "wget -q https://github.com/openshift/installer/releases/download/v0.${OCP4_VERSION}/openshift-install-linux-amd64"
                     sh 'mv openshift-install-linux-amd64 openshift-install'
                     sh 'chmod +x openshift-install'
                     
                     def ssh_rsa = readFile "${EC2_PUB}"
                     writeFile(file: 'install-config.yaml', text: 
-                    '''apiVersion: v1beta2
+                    '''apiVersion: v1beta3
 baseDomain: mg.dog8code.com
-machines:
-- name: master
-  platform: {}
-  replicas: 1
+compute:
 - name: worker
+  platform: {}
+  replicas: 2
+controlPlane:
+  name: master
   platform: {}
   replicas: 2
 metadata:
@@ -91,7 +93,7 @@ networking:
 platform:
   aws:
     region: ''' + "${EC2_REGION}" + '''
-pullSecret: \'''' + "${CI_PULL_SECRET}" + '''\'
+pullSecret: \'''' + "${PULL_SECRET}" + '''\'
 sshKey: |
   ''' + "${ssh_rsa}")
                 }

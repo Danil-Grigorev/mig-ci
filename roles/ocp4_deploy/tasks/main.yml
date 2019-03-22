@@ -1,0 +1,2 @@
+- name: deploy the ocp4 cluster
+  command: "{{ playbook_dir }}/openshift-install create cluster"
