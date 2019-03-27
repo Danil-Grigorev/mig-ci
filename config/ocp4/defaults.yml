@@ -3,7 +3,7 @@ aws_secret_access_key: "{{ lookup('env','AWS_SECRET_ACCESS_KEY') }}"
 aws_region: "{{ lookup('env','EC2_REGION') or 'us-east-2' }}"   # Default us-east-2
 pull_secret: "{{ lookup('file', '{{ playbook_dir }}/config/ocp4/pull-secret') | from_json }}" # Do not modify this line
 ssh_key: "{{ lookup('file', '{{ playbook_dir }}/config/ocp4/ci.pub')  }}"
-base_domain: mg.dog8code.com # Default mg.dog8code.com
-master_replicas: 1 # Default 1
-worker_replicas: 1 # Default 1
 cluster_name: "{{ lookup('env', 'OCP4_CLUSTER_NAME') or 'jenkins-ci'}}"
+oc_binary_location: "{{ ansible_env.HOME }}/bin/"
+ocp3_kubeconfig: "{{ ansible_env.HOME }}/kubeconfigs/ocp3-kubeconfig"
+ocp4_kubeconfig: "{{ ansible_env.HOME }}/kubeconfigs/ocp4-kubeconfig"

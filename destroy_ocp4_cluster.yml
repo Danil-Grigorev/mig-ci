@@ -1,7 +1,3 @@
 - hosts: localhost
-  vars:
-    state: absent
-  environment:
-    KUBECONFIG: "{{ playbook_dir }}/auth/kubeconfig"
   roles:
   - ocp4_cluster_destroy

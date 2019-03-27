@@ -1,4 +1,6 @@
 ---
 api_version: v1beta3
+base_domain: mg.dog8code.com # Default mg.dog8code.com
+master_replicas: 1 # Default 1
+worker_replicas: 1 # Default 1
 generate_config: true
-oc_binary_location: "{{ ansible_env.HOME }}/bin/"
