@@ -36,10 +36,9 @@
 - name: Create velero deployment
   k8s:
     state: "{{ state }}"
-    definition: "{{ lookup('file', '{{ playbook_dir }}/velero/config/minio/20-deployment.yaml')}}"
+    definition: "{{ lookup('template', '10-deployment.yaml.j2') | from_yaml }}"
     
 - name: Create restic daemonset
   k8s:
     state: "{{ state }}"
     definition: "{{ lookup('file', '{{ playbook_dir }}/velero/config/minio/30-restic-daemonset.yaml')}}"
-
