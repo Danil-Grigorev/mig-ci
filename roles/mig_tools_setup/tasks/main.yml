@@ -16,8 +16,8 @@
         state: present
       environment:
         KUBECONFIG: "{{ ocp4_kubeconfig }}"
-      tags: launch_velero_ocp4
-  when: cluster_version == '4'
+  tags: launch_velero_ocp4
+  
 
 - name: launching velero on OCP-3
   block:
@@ -34,5 +34,4 @@
         state: present
       environment:
         KUBECONFIG: "{{ ocp3_kubeconfig }}"
-      tags: launch_velero_ocp3
-  when: cluster_version == '3'
+  tags: launch_velero_ocp3

@@ -154,7 +154,7 @@ node {
                         ansiColor('xterm') {
                             ansiblePlaybook(
                                 playbook: 'setup_velero.yml',
-                                extras: "-e cluster_version=3",
+                                tags: 'launch_velero_ocp3',
                                 hostKeyChecking: false,
                                 unbuffered: true,
                                 colorized: true)
@@ -214,7 +214,7 @@ node {
                         ansiColor('xterm') {
                             ansiblePlaybook(
                                 playbook: 'setup_velero.yml',
-                                extras: "-e cluster_version=4",
+                                tags: 'launch_velero_ocp4',
                                 hostKeyChecking: false,
                                 unbuffered: true,
                                 colorized: true)

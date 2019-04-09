@@ -1,8 +1,4 @@
 - hosts: localhost
-  vars:
-    cluster_version: '4'
   roles:
   - mig_tools_prereqs
-  - role: mig_tools_setup
-    vars:
-      cluster_version: "{{ cluster_version }}"
+  - mig_tools_setup
