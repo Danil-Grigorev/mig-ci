@@ -4,3 +4,5 @@ base_domain: mg.dog8code.com # Default mg.dog8code.com
 master_replicas: 1 # Default 1
 worker_replicas: 1 # Default 1
 generate_config: true
+pull_secret: "{{ lookup('file', '{{ playbook_dir }}/config/pull-secret') | from_json }}"
+ssh_key: "{{ lookup('file', '{{ playbook_dir }}/config/ci.pub')  }}"

@@ -82,12 +82,12 @@ node {
             dir('mig-ci') {
                 // Prepare pull secret
                 withCredentials([file(credentialsId: "$OCP4_PULL_SECRET", variable: "PULL_SECRET")]) {
-                    sh 'cat ${PULL_SECRET} > config/ocp4/pull-secret'
+                    sh 'cat ${PULL_SECRET} > config/pull-secret'
                 }
                 
                 // Prepare EC2 pub key for ansible consumption
                 withCredentials([file(credentialsId: "$EC2_PUB_KEY", variable: "SSH_PUB_KEY")]) {
-                    sh "cat ${SSH_PUB_KEY} > config/ocp4/${EC2_PUBLIC_KEY_FILE}"
+                    sh "cat ${SSH_PUB_KEY} > config/${EC2_PUBLIC_KEY_FILE}"
                 }
             }
             

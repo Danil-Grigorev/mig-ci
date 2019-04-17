@@ -2,3 +2,5 @@
   hosts: localhost
   roles:
     - nfs_provision_pv
+  vars_files:
+    - "{{ playbook_dir }}/config/defaults.yml"

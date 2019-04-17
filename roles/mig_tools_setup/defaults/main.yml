@@ -1,0 +1,2 @@
+ocp3_kubeconfig: "{{ ansible_env.HOME }}/kubeconfigs/ocp3-kubeconfig"
+ocp4_kubeconfig: "{{ ansible_env.HOME }}/kubeconfigs/ocp4-kubeconfig"

@@ -1,10 +1,5 @@
-- name: get common variables
-  include_vars:
-    file: "{{ playbook_dir }}/config/ocp4/defaults.yml"
-
 - import_tasks: install_oc_binary.yml
   tags: install_oc_binary
 
 - import_tasks: ocp4_prereqs.yml
   tags: ocp4_prereqs
-

@@ -23,5 +23,3 @@
     - nfs_config
   vars:
     ansible_ssh_common_args: -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
-  environment:
-    PATH: "{{ ansible_env.PATH }}:~/bin"

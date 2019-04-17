@@ -1,5 +1,4 @@
 ---
-oc_binary_location: "{{ ansible_env.HOME }}/bin"
 user: kubeadmin
 pass: "{{ lookup('file', '{{ playbook_dir }}/auth/kubeadmin-password') }}"
 login: true

@@ -2,3 +2,5 @@
   roles:
   - ocp4_prereqs
   - ocp4_cluster_deploy
+  vars_files:
+    - "{{ playbook_dir }}/config/defaults.yml"

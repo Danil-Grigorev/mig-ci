@@ -1,7 +1,3 @@
-- name: Get defaults
-  include_vars:
-    file: "{{ playbook_dir }}/config/ocp4/defaults.yml"
-
 - import_tasks: get_ocp4_installer.yml
   tags: get_ocp4_installer
 

@@ -9,7 +9,7 @@
 - block:
 
   - name: Restart router if not running
-    shell: "oc project default && oc rollout latest dc/router && sleep 5"
+    shell: "{{ oc_binary_location }}/oc project default && {{ oc_binary_location }}/oc rollout latest dc/router && sleep 5"
 
   - name: Check state of router pod after restart
     k8s_facts:

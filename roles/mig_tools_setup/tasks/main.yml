@@ -1,7 +1,3 @@
-- name: Get defaults
-  include_vars:
-    file: "{{ playbook_dir }}/config/ocp4/defaults.yml"
-
 - name: launching velero on OCP-4
   block:
     - name: Logging to OCP4 and saving credentials
