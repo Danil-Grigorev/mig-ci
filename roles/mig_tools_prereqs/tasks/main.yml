@@ -3,6 +3,3 @@
 
 - import_tasks: install_velero.yml
   tags: install_velero
-
-- import_tasks: apply_fixes.yml
-  tags: apply_fixes
