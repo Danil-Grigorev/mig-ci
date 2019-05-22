@@ -18,22 +18,14 @@
       - rhel-7-server-rpms
       - rhel-7-server-extras-rpms
       - "rhel-7-server-ose-{{ ocp_version[1:] }}-rpms"
-      - rhel-7-fast-datapath-rpms
       - rhel-7-server-ansible-2.6-rpms
     state: enabled
 
-- name: Enable EPEL
-  package:
-    name: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
-    state: present
-
-- name: Install boto and boto3 through yum
-  yum:
-    name:
-    - python2-boto
-    - python2-botocore
-    - python2-boto3
-    state: latest
+- name: Enable addition OKD repositories for ocp v3.9
+  rhsm_repository:
+    name: rhel-7-fast-datapath-rpms
+    state: enabled
+  when: ocp_version == 'v3.9'
 
 - name: Install RPM-based OCP installer for v3.9
   yum:
@@ -42,11 +34,31 @@
     state: present
   when: ocp_version == 'v3.9'
 
+- name: Enable EPEL for python-docker-py
+  package:
+    name: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
+    state: present
+  when: ocp_version == 'v3.10'
+
+- name: Ensure python-docker-py is installed
+  yum:
+    name: python-docker-py
+    state: present
+  when: ocp_version == 'v3.10'
+
 - name: Install RPM-based OCP installer for v3.10
   yum:
     name: openshift-ansible
     state: present
   when: ocp_version == 'v3.10'
+
+# - name: Install boto and boto3 through yum
+#   yum:
+#     name:
+#     - python2-boto
+#     - python2-botocore
+#     - python2-boto3
+#     state: latest
 
 - name: Ensure base packages exist
   yum:
@@ -64,14 +76,13 @@
     - kexec-tools
     - sos
     - psacct
-    - python-docker-py
     - docker
-    state: latest
+    state: present
 
 - name: Install docker for v3.10 and v3.9
   yum:
     name:
-    - docker-1.13.1*
+    - docker-1.13.1
     state: present
   when: ocp_version == 'v3.10' or ocp_version == 'v3.9'
 
@@ -81,17 +92,18 @@
     enabled: true
     daemon_reload: true
     name: docker
+  when: ocp_version == 'v3.10' or ocp_version == 'v3.9'
 
-- name: Update installed packages
-  yum:
-    name: '*'
-    state: latest
+# - name: Update installed packages
+#   yum:
+#     name: '*'
+#     state: latest
 
-- name: Reboot the machine
-  reboot:
-    pre_reboot_delay: 5
-    test_command: whoami
-    reboot_timeout: 600
+# - name: Reboot the machine
+#   reboot:
+#     pre_reboot_delay: 5
+#     test_command: whoami
+#     reboot_timeout: 600
 
-- name: Wait for ssh connection
-  wait_for_connection:
+# - name: Wait for ssh connection
+#   wait_for_connection:
