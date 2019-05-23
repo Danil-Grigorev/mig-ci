@@ -1,0 +1,30 @@
+- name: Check that oc binary is installed
+  stat:
+    path: "{{ oc_binary }}"
+  register: oc_installed
+
+- block:
+  - name: Create binary directory
+    file:
+        path: "{{ item }}"
+        recurse: true
+        state: directory
+    with_items:
+      - "{{ oc_target_location }}"
+      - "{{ oc_arch | dirname }}"
+
+  - name: Get client binary archive
+    get_url:
+      url: "{{ oc_release_url }}"
+      dest: "{{ oc_arch }}"
+
+  - name: "Unpack the binary"
+    command: tar -xzf {{ oc_arch }}  -C {{ oc_arch | dirname }}
+
+  - name: Install newly downloaded oc binary
+    copy:
+      src: "{{ oc_arch | dirname }}/oc"
+      dest: "{{ oc_binary }}"
+      mode: 0755
+      remote_src: True
+  when: not oc_installed.stat.exists

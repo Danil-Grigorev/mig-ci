@@ -4,7 +4,7 @@
     tasks_from: get_ip
 
 - name: Remove existing PVs
-  shell: "for i in $({{ oc_binary_location }}/oc get pv --no-headers | awk '{ print $1 }'); do {{ oc_binary_location }}/oc delete pv $i; done"
+  shell: "for i in $({{ oc_binary }} get pv --no-headers | awk '{ print $1 }'); do {{ oc_binary }} delete pv $i; done"
 
 - name: Template the PV resources
   template:
@@ -12,7 +12,7 @@
     dest: "{{ role_path }}/files/pv.yml"
 
 - name: Create NFS PVs
-  shell: "{{ oc_binary_location }}/oc create -f {{ role_path }}/files/pv.yml"
+  shell: "{{ oc_binary }} create -f {{ role_path }}/files/pv.yml"
 
 - name: Remove template tmp file
   file:

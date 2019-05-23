@@ -9,5 +9,9 @@
     - "You can login with 'oc login -u admin -p admin https://{{ inventory_hostname }}.xip.io:8443 --insecure-skip-tls-verify=true'"
 
 - name: Login to cluster
+  include_role:
+    name: login_ocp
+  vars:
+    cluster_version: '3'
+    console_addr: "https://{{ inventory_hostname }}.xip.io:8443"
   delegate_to: localhost
-  command: "{{ oc_binary_location }}/oc login -u admin -p admin https://{{ inventory_hostname }}.xip.io:8443 --insecure-skip-tls-verify=true"

@@ -4,6 +4,7 @@ base_domain: mg.dog8code.com # Default mg.dog8code.com
 network_type: OpenShiftSDN # Default is OpenShiftSDN
 master_replicas: 1 # Default 1
 worker_replicas: 1 # Default 1
+cluster_name: "{{ lookup('env', 'CLUSTER_NAME') or 'jenkins-ci'}}" # Name of the target OCP4 cluster
 
 generate_config: true
 pull_secret: "{{ lookup('file', '{{ workspace }}/keys/pull-secret') | from_json }}"

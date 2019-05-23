@@ -10,9 +10,13 @@ ec2_region: "{{ lookup('env', 'EC2_REGION') or lookup('env', 'AWS_REGION') or 'u
 ec2_key: "{{ lookup('ENV', 'EC2_KEY') or 'ci' }}"
 ec2_private_key_file: "{{ workspace }}/keys/{{ ec2_key }}.pem"
 ec2_ssh_user: "ec2-user"
+
 cluster_version: "{{ lookup('env', 'CLUSTER_VERSION') or '4'}}"
-cluster_name: "{{ lookup('env', 'CLUSTER_NAME') or 'jenkins-ci'}}"
-oc_binary_location: "{{ ansible_env.HOME }}/bin/"
-ocp_version: "{{ lookup('env', 'OPENSHIFT_VERSION') or 'v3.11' }}"
-ocp3_kubeconfig: "{{ ansible_env.HOME }}/kubeconfigs/ocp3-kubeconfig"
-ocp4_kubeconfig: "{{ ansible_env.HOME }}/kubeconfigs/ocp4-kubeconfig"
+oc_binary: "{{ workspace }}/bin/oc"
+ocp3_version: "{{ lookup('env', 'OCP3_VERSION') or 'v3.11' }}"
+ocp4_version: "{{ lookup('env', 'OCP4_VERSION') or 'v4.1' }}"
+
+default_kube_location: "{{ workspace }}/kubeconfigs"
+default_kubeconfig: "{{ lookup('env', 'KUBECONFIG') or default_kube_location + '/kubeconfig' }}"
+ocp3_kubeconfig: "{{ default_kube_location }}/ocp-{{ ocp3_version }}-kubeconfig"
+ocp4_kubeconfig: "{{ default_kube_location }}/ocp-{{ ocp4_version }}-kubeconfig"

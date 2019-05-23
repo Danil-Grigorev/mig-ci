@@ -1,8 +1,30 @@
-- debug:
-    msg: "Logging into cluster using KUBECONFIG: {{ source_kubeconfig }}"
+- name: Ensure source kubeconfig dir was created
+  file:
+    state: directory
+    recurse: true
+    path: "{{ item | dirname }}"
+  with_items:
+    - "{{ source_kubeconfig }}"
+    - "{{ target_kubeconfig }}"
 
-- name: login to cluster
-  shell: "{{ oc_binary_location }}/oc login -u {{ user }} -p {{ pass }} --insecure-skip-tls-verify=true"
+- name: Search for kubeconfig
+  stat:
+    path: "{{ source_kubeconfig }}"
+  register: kubeconfig
+
+- assert:
+    that: kubeconfig.stat.exists or console_addr != ''
+
+- block:
+  - set_fact:
+      console_addr: "{{ kubeconfig_addr }}"
+
+  - debug:
+      msg: "Logging into cluster with KUBECONFIG from: '{{ source_kubeconfig }}'"
+  when: kubeconfig.stat.exists and console_addr == ''
+
+- name: Login to cluster
+  shell: "{{ oc_binary }} login -u {{ user }} -p {{ passwd }} {{ console_addr }} --insecure-skip-tls-verify=true"
   register: login
   retries: 10
   delay: 6

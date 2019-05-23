@@ -1,4 +1,29 @@
 ---
-user: kubeadmin
-pass: "{{ lookup('file', '{{ playbook_dir }}/auth/kubeadmin-password') }}"
-login: true
+# Credentials for oc login
+user: admin # Username for cluster login
+passwd: admin # Password for cluster login
+console_addr: '' # User specified cluster address
+force_login: False # Login into cluster anyway with provided credentials
+
+# Kubeconfig processing
+source_kubeconfig: "{{ default_kubeconfig }}"
+target_kubeconfig: "{{ ocp{{ cluster_version }}_kubeconfig }}"
+
+kubeconfig_content: "{{ lookup('file', source_kubeconfig) | from_yaml }}"
+current_context: "{{ kubeconfig_content['current-context'].split('/')[1] | replace('-', '.') }}"
+server_addr: "{{ lookup('file', source_kubeconfig) | regex_search(' +server:.*' + current_context) }}"
+kubeconfig_addr: "{{ server_addr | regex_replace('^ *server: *(.*)$', '\\1') }}"
+
+# Download section
+system_types:
+  "Darwin": "mac"
+ocp_release_extension:
+  'linux': 'tar.gz'
+  'mac': 'zip'
+ocp_release:
+  url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.1.0-rc.5
+  release_ver: openshift-client-{{ system_prefix }}-4.1.0-rc.5
+system_prefix: "{{ system_types[ansible_os_family] | default('linux') }}"
+oc_release_url: "{{ ocp_release.url }}/{{ ocp_release.release_ver }}.{{ ocp_release_extension[system_prefix] }}"
+oc_arch: "{{ oc_target_location }}/{{ ocp_release.release_ver }}/client.{{ ocp_release_extension[system_prefix] }}"
+oc_target_location: "{{ oc_binary | dirname }}"
