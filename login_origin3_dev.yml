@@ -1,0 +1,16 @@
+- hosts: localhost
+  pre_tasks:
+    - name: Get origin3-dev instance ip
+      include_role:
+        name: ec2_provision
+        tasks_from: get_ip
+      vars:
+        instance_name: origin3-dev
+  roles:
+    - login_ocp
+  vars:
+    cluster_version: '3'
+    force_login: true
+    console_addr: "https://{{ ec2_instance_ip }}.nip.io:8443"
+    user: "admin"
+    password: "admin"

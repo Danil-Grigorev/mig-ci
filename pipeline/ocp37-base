@@ -49,7 +49,6 @@ node {
                     'ec2_instance_type': "$EC2_INSTANCE_TYPE",
                     'ec2_repo_create': false,
                     'openshift_setup_client_version': "$OPENSHIFT_VERSION",
-                    'openshift_setup_remote_auto_login': true,
                     'openshift_setup_cluster_retries': 5]
                 writeYaml file: 'overrides.yml', data: overrides
             }
@@ -74,6 +73,26 @@ node {
                             ansiblePlaybook(
                                 playbook: 'deploy.yml',
                                 extras: "-e @overrides.yml",
+                                hostKeyChecking: false,
+                                unbuffered: true,
+                                colorized: true)
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Login OCP3') {
+            withCredentials([
+                string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
+                string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) 
+            {
+                dir('mig-ci') {
+                    withEnv(['PATH+EXTRA=~/bin']) {
+                        ansiColor('xterm') {
+                            ansiblePlaybook(
+                                playbook: 'login_origin3_dev.yml',
                                 hostKeyChecking: false,
                                 unbuffered: true,
                                 colorized: true)
