@@ -115,6 +115,19 @@ def deploy_ocp3_agnosticd() {
           writeYaml file: 'vars.yml', data: vars
           vars = vars.collect { e -> '-e ' + e.key + '=' + e.value }
 
+          // Dump teardown wars on host
+          def teardown_vars = [
+            'aws_region': "${AWS_REGION}",
+            'guid': "${CLUSTER_NAME}-${BUILD_NUMBER}",
+            'env_type': "ocp-workshop",
+            'cloud_provider': "ec2",
+            'aws_access_key_id': "${AWS_ACCESS_KEY_ID}",
+            'aws_secret_access_key': "${AWS_SECRET_ACCESS_KEY}"
+          ]
+          sh 'rm -f teardown_vars.yml'
+          writeYaml file: 'teardown_vars.yml', data: teardown_vars
+          teardown_vars = teardown_vars.collect { e -> '-e ' + e.key + '=' + e.value }
+
           withEnv(['PATH+EXTRA=~/.local/bin']) {
             echo "Region: ${AWS_REGION}"
             echo "Name: ${CLUSTER_NAME}"
@@ -130,6 +143,7 @@ def deploy_ocp3_agnosticd() {
             }
           }
         }
+
         def login_vars = [
           "console_addr": "${console_addr}",
           "user": "${cluster_adm_user}",
@@ -181,13 +195,17 @@ def deployOCP4() {
 def deploy_NFS() {
   return {
     stage('Configure NFS storage') {
-      steps_finished << 'Configure NFS storage'
-      ansiColor('xterm') {
-        ansiblePlaybook(
-          playbook: 'nfs_server_deploy.yml',
-          hostKeyChecking: false,
-          unbuffered: true,
-          colorized: true)
+      if (env.DEPLOYMENT_TYPE != 'agnosticd') {
+        steps_finished << 'Configure NFS storage'
+        ansiColor('xterm') {
+          ansiblePlaybook(
+            playbook: 'nfs_server_deploy.yml',
+            hostKeyChecking: false,
+            unbuffered: true,
+            colorized: true)
+        }
+      } else {
+        echo 'AgnosticD has preprovisioned PVs'
       }
     }
   }
@@ -207,27 +225,6 @@ def provision_pvs() {
           ansiColor('xterm') {
             ansiblePlaybook(
               playbook: 'nfs_provision_pvs.yml',
-              hostKeyChecking: false,
-              unbuffered: true,
-              colorized: true)
-          }
-        }
-      }
-    }
-  }
-}
-
-
-def prepare_test_data(kubeconfig) {
-  return {
-    stage('Prepare test data on source cluster') {
-      steps_finished << 'Prepare test data on source cluster'
-      withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${kubeconfig}"]) {
-        dir('ocp-mig-test-data') {
-          ansiColor('xterm') {
-            ansiblePlaybook(
-              playbook: 'mysql-pvc.yml',
-              extras: "-e with_backup=false -e with_restore=false",
               hostKeyChecking: false,
               unbuffered: true,
               colorized: true)
@@ -274,8 +271,93 @@ def sanity_checks(kubeconfig) {
           ansiblePlaybook(
             playbook: 'ocp_sanity_check.yml',
             hostKeyChecking: false,
+            extras: "-e oc_binary=/var/lib/jenkins/bin/oc",
             unbuffered: true,
             colorized: true)
+        }
+      }
+    }
+  }
+}
+
+def deploy_mig_controller_source(
+  source_kubeconfig,
+  target_kubeconfig,
+  host_on_source = false,
+  source_ocp3 = true) {
+  def cluster_version
+  if (source_ocp3) {
+    cluster_version = 3
+  } else {
+    cluster_version = 4
+  }
+  return {
+    stage('Deploy mig-controller on both clusters') {
+      steps_finished << 'Deploy mig-controller on both clusters'
+      // Source
+      withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${source_kubeconfig}", "CLUSTER_VERSION=${cluster_version}"]) {
+        ansiColor('xterm') {
+          ansiblePlaybook(
+            playbook: 'mig_controller_deploy.yml',
+            extras: "-e mig_controller_host_cluster=${host_on_source}",
+            hostKeyChecking: false,
+            unbuffered: true,
+            colorized: true)
+        }
+      }
+      // Target
+      withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${target_kubeconfig}"]) {
+        ansiColor('xterm') {
+          ansiblePlaybook(
+            playbook: 'mig_controller_deploy.yml',
+            extras: "-e mig_controller_host_cluster=${!host_on_source}",
+            hostKeyChecking: false,
+            unbuffered: true,
+            colorized: true)
+        }
+      }
+    }
+  }
+}
+
+def deploy_mig_controller_target(kubeconfig, host_controller = false) {
+  stage('Deploy mig-controller on target cluster') {
+      steps_finished << 'Deploy mig-controller on target cluster'
+      withCredentials([
+          string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
+          string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
+          ])
+      {
+          withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${KUBECONFIG_OCP4}"]) {
+              ansiColor('xterm') {
+                  ansiblePlaybook(
+                      playbook: 'mig_controller_deploy.yml',
+                      hostKeyChecking: false,
+                      unbuffered: true,
+                      colorized: true)
+              }
+          }
+      }
+        }
+}
+
+def execute_migration(kubeconfig) {
+  return {
+    stage('Execute migration') {
+      dir('mig-e2e') {
+        withEnv(["KUBECONFIG=${kubeconfig}"]) {
+          ansiColor('xterm') {
+            steps_finished << 'Execute nginx migration'
+            ansiblePlaybook(
+              playbook: 'nginx.yml',
+              hostKeyChecking: false,
+              unbuffered: true,
+              colorized: true)
+            // TODO: other migration samples
+            // Template:
+            //  steps_finished << 'Execute xxx migration'
+            //  ansiblePlaybook( ...
+          }
         }
       }
     }
