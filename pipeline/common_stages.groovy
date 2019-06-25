@@ -215,21 +215,25 @@ def deploy_NFS() {
 def provision_pvs() {
   return {
     stage('Provison PVs on source cluster') {
-      steps_finished << 'Provison PVs on source cluster'
-      withCredentials([
-        string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-        string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
-        ])
-      {
-        withEnv(["KUBECONFIG=${KUBECONFIG_OCP3}"]) {
-          ansiColor('xterm') {
-            ansiblePlaybook(
-              playbook: 'nfs_provision_pvs.yml',
-              hostKeyChecking: false,
-              unbuffered: true,
-              colorized: true)
+      if (env.DEPLOYMENT_TYPE != 'agnosticd') {
+        steps_finished << 'Provison PVs on source cluster'
+        withCredentials([
+          string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
+          string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
+          ])
+        {
+          withEnv(["KUBECONFIG=${KUBECONFIG_OCP3}"]) {
+            ansiColor('xterm') {
+              ansiblePlaybook(
+                playbook: 'nfs_provision_pvs.yml',
+                hostKeyChecking: false,
+                unbuffered: true,
+                colorized: true)
+            }
           }
         }
+      } else {
+        echo 'PV provisioning is skipped for agnosticd'
       }
     }
   }
