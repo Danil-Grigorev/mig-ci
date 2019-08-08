@@ -59,15 +59,15 @@ node {
         utils.prepare_cpma(CPMA_REPO, CPMA_BRANCH)
     }
 
-    stage('Deploy clusters') {
-        steps_finished << 'Deploy clusters'
-        parallel deploy_OCP3: {
-            common_stages.deploy_ocp3_agnosticd(SOURCE_KUBECONFIG).call()
-        }, deploy_OCP4: {
-            common_stages.deployOCP4(TARGET_KUBECONFIG).call()
-        },
-        failFast: true
-    }
+    // stage('Deploy clusters') {
+    //     steps_finished << 'Deploy clusters'
+    //     parallel deploy_OCP3: {
+    //         common_stages.deploy_ocp3_agnosticd(SOURCE_KUBECONFIG).call()
+    //     }, deploy_OCP4: {
+    //         common_stages.deployOCP4(TARGET_KUBECONFIG).call()
+    //     },
+    //     failFast: true
+    // }
 
     stage('Run CPMA') {
       steps_finished << 'Run CPMA report and manifest extraction'
@@ -82,10 +82,10 @@ node {
         withEnv([
             "GOROOT=${goroot}",
             "PATH+GO=${goroot}/bin",
-            "KUBECONFIG=${SOURCE_KUBECONFIG}",
-            "CPMA_SSHPRIVATEKEY=${PRIVATE_KEY}",
-            "CPMA_HOSTNAME=master1.${CLUSTER_NAME}-v3-${BUILD_NUMBER}${BASESUFFIX}",
-            "CPMA_CLUSTERNAME=${CURRENTCONTEXT}",
+            "KUBECONFIG=/var/lib/jenkins/testing/kubeconfig",
+            "CPMA_SSHPRIVATEKEY=/var/lib/jenkins/testing/libra.pem",
+            "CPMA_HOSTNAME=master1.dgr-ui-source-3.mg.dog8code.com",
+            "CPMA_CLUSTERNAME=master1-dgr-ui-source-3-mg-dog8code-com:443",
             "CPMA_CONFIGSOURCE=remote",
             "CPMA_WORKDIR=${data_dir}",
             "CPMA_SAVECONFIG=false",
@@ -96,6 +96,7 @@ node {
             "CPMA_CRIOCONFIGFILE=/etc/crio/crio.conf",
             "CPMA_SSHLOGIN=ec2-user",
             "CPMA_SSHPORT=22"]) {
+          sh 'env | grep CPMA'
           sh "make build && ${WORKSPACE}/cpma/bin/cpma -i --debug --verbose"
         }
       }
@@ -103,8 +104,8 @@ node {
 
     stage('Apply manifests on a target cluster') {
       steps_finished << 'Apply manifests on a target cluster'
-      withEnv(["KUBECONFIG=${TARGET_KUBECONFIG}"]) {
-        sh "find ${manifests_dir} -type f | xargs -I{} ${OC_BINARY} apply -f {}"
+      withEnv(["KUBECONFIG=/var/lib/jenkins/testing/kubeconfig-target"]) {
+        sh "find ${manifests_dir} -type f | xargs -I{} /var/lib/jenkins/workspace/cpma-e2e-manifests-63/bin/oc apply -f {}"
       }
     }
   } catch (Exception ex) {
